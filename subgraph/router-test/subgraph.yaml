@@ -1,0 +1,62 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: DcRouter
+    network: fuji
+    source:
+      address: "0xcD819d59B019955374C9f3d43B6AE568Fe89F4c6"
+      abi: DcRouter
+      startBlock: 15811945
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Bridged
+        - CancelWithdrawn
+        - Deposited
+        - MessageFailed
+        - OwnershipTransferred
+        - RequestedWithdraw
+        - RetryMessageSuccess
+        - RouterChanged
+        - SetMinDstGas
+        - SetPrecrime
+        - SetTrustedRemote
+        - SetTrustedRemoteAddress
+        - Withdrawn
+      abis:
+        - name: DcRouter
+          file: ./abis/DcRouter.json
+      eventHandlers:
+        - event: Bridged(indexed uint16,indexed address,uint256)
+          handler: handleBridged
+        - event: CancelWithdrawn(indexed address,indexed uint256,uint256)
+          handler: handleCancelWithdrawn
+        - event: Deposited(indexed address,indexed uint256,uint256)
+          handler: handleDeposited
+        - event: DepositTransferred(indexed address,indexed uint256,uint256)
+          handler: handleDepositTransferred
+        - event: MessageFailed(uint16,bytes,uint64,bytes,bytes)
+          handler: handleMessageFailed
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: RequestedWithdraw(indexed address,indexed uint256,uint256)
+          handler: handleRequestedWithdraw
+        - event: RetryMessageSuccess(uint16,bytes,uint64,bytes32)
+          handler: handleRetryMessageSuccess
+        - event: RouterChanged(address,address,address)
+          handler: handleRouterChanged
+        - event: SetMinDstGas(uint16,uint16,uint256)
+          handler: handleSetMinDstGas
+        - event: SetPrecrime(address)
+          handler: handleSetPrecrime
+        - event: SetTrustedRemote(uint16,bytes)
+          handler: handleSetTrustedRemote
+        - event: SetTrustedRemoteAddress(uint16,bytes)
+          handler: handleSetTrustedRemoteAddress
+        - event: Withdrawn(indexed address,indexed uint256,uint256)
+          handler: handleWithdrawn
+      file: ./src/dc-router.ts

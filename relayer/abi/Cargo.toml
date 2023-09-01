@@ -1,0 +1,12 @@
+[package]
+name = "abi"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ethcontract = { version = "0.15.4", default-features = false }
+ethcontract-generate = "0.15.4"
+
+[build-dependencies]

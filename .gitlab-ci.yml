@@ -1,0 +1,119 @@
+default:
+  tags: ["docker"]
+  image: node:16
+
+stages:
+  - build
+
+# -----
+# Global variables (can be changed on manual pipelines)
+# -----
+
+variables:
+  FF_USE_FASTZIP: "true"
+  ARTIFACT_COMPRESSION_LEVEL: "fast"
+  CACHE_COMPRESSION_LEVEL: "fast"
+  FF_SCRIPT_SECTIONS: "true"
+  GITLAB_TOKEN: $CI_JOB_TOKEN
+  DEPLOY_BB_FABRIC:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Deploy bb fabric"
+  DEPLOY_ROUTERS:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Deploy routers"
+  DEPLOY_AAVE_VAULT:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Deploy aave vault"
+  DEPLOY_AAVE_LENS:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Deploy aave lens"
+  DEPLOY_AAVE_STRATEGY:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Deploy aave strategy"
+  DEPLOY_GMX_VAULT:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Deploy gmx vault"
+
+# -----
+# Test build on MR
+# -----
+
+test_build:
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main" && $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables:
+        ADDRESS_BRANCH: "main"
+    - if: $CI_COMMIT_REF_NAME != "main" && $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables:
+        ADDRESS_BRANCH: "develop"
+  stage: build
+  script:
+    - mv $ENV .env
+    - npm install
+    - npx hardhat compile
+    - npx hardhat coverage
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  cache:
+    - key:
+        files:
+          - package-lock.json
+      paths:
+        - node_modules/
+      policy: pull-push
+
+# -----
+# Build main and develop
+# -----
+
+build:
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
+      variables:
+        ADDRESS_BRANCH: "main"
+    - if: $CI_COMMIT_REF_NAME == "develop" && $CI_PIPELINE_SOURCE != "merge_request_event"
+      variables:
+        ADDRESS_BRANCH: "develop"
+  stage: build
+  script:
+    - mv $ENV .env
+    - |+
+      if [[ $ENABLE_LOCAL_ADDRESSES == "true" ]] ; then 
+        echo "----- Overriding addresses.json from ADDRESSES_FILE env variable as ENABLE_LOCAL_ADDRESSES=true"
+        mv $ADDRESSES_FILE config/addresses.json
+      fi
+    - npm install
+    - npx hardhat compile
+    - npx hardhat coverage
+    - ./scripts/utils/deploy_full.sh -e testnet
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  artifacts:
+    expire_in: 30 days
+    name: contracts-artifacts
+    paths:
+      - artifacts/contracts
+      - config/addresses.json
+  cache:
+    - key:
+        files:
+          - package-lock.json
+      paths:
+        - node_modules/
+      policy: pull-push

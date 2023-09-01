@@ -1,0 +1,13 @@
+type DepositEntity @entity {
+  id: ID!
+  strategyId: BigInt!
+  userAddress: Bytes! # address
+  depositAmount: BigInt!
+}
+
+type UserDeposit @entity {
+  id: ID!
+  userAddress: Bytes! # address
+  totalDepositAmount: BigInt
+  strategyId: BigInt!
+}
